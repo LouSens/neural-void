@@ -1,19 +1,23 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
-<img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white"/>
-<img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black"/>
-<img src="https://img.shields.io/badge/XGBoost-Ensemble-FF6600?style=for-the-badge&logo=databricks&logoColor=white"/>
-<img src="https://img.shields.io/badge/Gemini_AI-Insights-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
+# ⚡ Neural Void
 
-# ⚡ Neural Void — TikTok Behaviour Intelligence
+**TikTok Behaviour Intelligence**
 
-**Clinical-grade behavioural analytics for TikTok watch history.**  
-Upload your data export → receive a 25-feature ML risk assessment + Gemini-powered clinical report.
-
-[Live Demo](#) · [Report a Bug](https://github.com/LouSens/screentime-dashboard-tiktok/issues) · [Request Feature](https://github.com/LouSens/screentime-dashboard-tiktok/issues)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.5-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
+[![XGBoost](https://img.shields.io/badge/XGBoost-2.1-189FDD)](https://xgboost.readthedocs.io/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash%20Lite-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+[![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 </div>
+
+Clinical-grade behavioural analytics for TikTok watch history. Upload your data export to receive a 25-feature ML risk assessment and a Gemini-powered clinical report.
+
+[Report a Bug](https://github.com/LouSens/neural-void/issues) · [Request Feature](https://github.com/LouSens/neural-void/issues)
 
 ---
 
