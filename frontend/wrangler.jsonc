@@ -1,0 +1,10 @@
+// Cloudflare: serves the built front end (frontend/dist) as a static site.
+// The name must match the project name chosen in the Cloudflare dashboard.
+{
+  "name": "neural-void",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
