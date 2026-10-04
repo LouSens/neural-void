@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -8,6 +8,8 @@ import joblib
 import uvicorn
 import logging
 from datetime import datetime
+from typing import Optional
+from zoneinfo import ZoneInfo
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -91,7 +93,7 @@ OUTLIER_QUANTILE  = 0.95
 
 
 # ── Core feature engineering (mirrors tiktok-analysis.py) ──────────────────
-def full_feature_pipeline(content_str: str):
+def full_feature_pipeline(content_str: str, tz: str = TIMEZONE):
     """
     Parse text → sessions → per-day 25-feature table → prediction.
     Returns (daily_df, raw_df, feature_vector_today)
@@ -107,7 +109,7 @@ def full_feature_pipeline(content_str: str):
     df['link']       = (links + [''] * len(matches))[:len(matches)]
     df['video_id']   = df['link'].str.extract(r'/video/(\d+)')
     df = df.sort_values('timestamp').reset_index(drop=True)
-    df['local_time'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(TIMEZONE)
+    df['local_time'] = df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(tz)
 
     # ── session detection ─────────────────────────────────────────────────
     gap_thresh = SESSION_GAP_MIN * 60
@@ -210,11 +212,20 @@ async def health_check():
 
 
 @app.post("/analyze")
-async def analyze_file(file: UploadFile = File(...)):
+async def analyze_file(file: UploadFile = File(...), tz: Optional[str] = Form(None)):
     try:
         content_str = (await file.read()).decode('utf-8', errors='ignore')
 
-        daily, raw_df, sess = full_feature_pipeline(content_str)
+        # Hours are shown in the visitor's own time zone when the browser sends one.
+        user_tz = TIMEZONE
+        if tz:
+            try:
+                ZoneInfo(tz)
+                user_tz = tz
+            except Exception:
+                logger.warning(f"Unknown time zone '{tz}', using {TIMEZONE}")
+
+        daily, raw_df, sess = full_feature_pipeline(content_str, user_tz)
 
         # ── prediction ────────────────────────────────────────────────────
         risk_score = 0.5
@@ -274,6 +285,19 @@ async def analyze_file(file: UploadFile = File(...)):
         else:
             trend = "insufficient data"
 
+        # ── plain-language extras for the summary screens ────────────────
+        days_tracked          = int(len(daily))
+        nights_past_midnight  = int((daily['late_night_clips'] > 0).sum())
+        late_by_day           = raw_df[raw_df['is_late_night']].groupby('date')['watch_min'].sum()
+        late_minutes          = [round(float(late_by_day.get(d, 0.0)), 1) for d in daily['date']]
+        late_night_hours      = round(float(sum(late_minutes)) / 60, 1)
+        session_minutes       = [round(float(x), 1) for x in sess['session_duration_min'].tolist()]
+        # longest run of days in a row that each had a long sitting
+        long_day_streak, run  = 0, 0
+        for flag in daily['binge_sessions'].tolist():
+            run = run + 1 if flag else 0
+            long_day_streak = max(long_day_streak, run)
+
         # ── chart data ────────────────────────────────────────────────────
         # Trend area chart (daily smoothed score)
         trend_dates  = daily['date'].astype(str).tolist()
@@ -308,28 +332,28 @@ async def analyze_file(file: UploadFile = File(...)):
         ai_recommendation = "AI insights unavailable."
         if GEMINI_AVAILABLE and llm_client:
             try:
-                prompt = f"""You are a clinical-grade digital wellness analyst for the Neural Void platform.
+                prompt = f"""You are a friendly guide helping an ordinary person understand their own TikTok habits.
+They are not technical. Write the way you would explain it to a friend: short sentences, everyday words.
 
-BEHAVIOURAL METRICS (25 ML features extracted):
-- Total watch events: {len(raw_df):,}
-- Est. total watch time: {total_watch_hrs:.1f} hours
-- Total sessions: {total_sessions} | Binge sessions (>45m): {binge_count} ({binge_count/max(total_sessions,1):.0%})
-- Avg session: {avg_sess_min:.1f} min | Longest: {max_sess_min:.1f} min
-- Doomscroll velocity: {avg_velocity:.2f} clips/min
-- Late-night usage avg: {avg_late_night:.1f} clips/day
-- Morning trigger avg: {avg_morning:.1f} clips/day
-- Re-watch ratio: {avg_rewatched:.1%}
-- Bad-habit days: {bad_days_ratio:.0%} of tracked period
-- Peak day: {peak_day} | Peak hour: {peak_hour:02d}:00
-- Relapse risk score: {risk_score:.0%} ({('HIGH' if risk_score > 0.6 else 'MEDIUM' if risk_score > 0.3 else 'LOW')})
-- Behaviour trend: {trend}
-- Max consecutive binge sessions: {binge_streak_max}
+WHAT THEIR WATCH HISTORY SHOWS ({days_tracked} days):
+- Videos watched: {len(raw_df):,}
+- Time watched: about {total_watch_hrs:.1f} hours
+- Sittings (times they sat down to watch): {total_sessions}
+- Long sittings of 45 minutes or more: {binge_count}
+- A typical sitting: {avg_sess_min:.0f} minutes | Longest: {max_sess_min:.0f} minutes
+- Scrolling speed: {avg_velocity:.1f} videos a minute
+- Nights they were still watching after midnight: {nights_past_midnight} of {days_tracked}
+- Time watched between midnight and 7 am: about {late_night_hours:.1f} hours
+- Videos first thing in the morning: about {avg_morning:.0f} a day
+- Busiest day: {peak_day} | Busiest hour: {peak_hour:02d}:00
+- Overall habit level: {('high' if risk_score > 0.6 else 'moderate' if risk_score > 0.3 else 'light')}
+- Direction over the last two weeks: {('getting stronger' if trend == 'worsening' else 'easing off' if trend == 'improving' else 'not enough days to tell')}
 
-Write a professional, data-driven assessment in exactly 3 labelled parts:
-**Behavioral Diagnosis:** (1 sentence referencing velocity, binge rate, and sleep impact)
-**Risk Forecast:** (1 sentence on tomorrow's relapse probability and the primary risk driver)
-**Intervention Protocol:** (1 actionable sentence: a specific hour-range or session-cap recommendation)
-Be clinical and precise. Max 75 words total."""
+Write exactly 3 labelled parts, one or two sentences each:
+**What we see:** the clearest pattern in how and when they watch.
+**What is likely next:** what tomorrow or next week will probably look like if nothing changes, and the main reason.
+**One thing to try:** one specific, realistic change, with a time of day or a time limit.
+Rules: no technical words (no "risk score", "velocity", "ratio", "session", "binge", "model", "data"). No blame. Use "you". Max 80 words total."""
 
                 resp = llm_client.models.generate_content(model=working_model, contents=prompt)
                 if resp and hasattr(resp, 'text') and resp.text:
@@ -364,6 +388,12 @@ Be clinical and precise. Max 75 words total."""
                 # Peaks
                 "peak_hour":              peak_hour,
                 "peak_day":               peak_day,
+                # Plain-language extras
+                "days_tracked":           days_tracked,
+                "nights_past_midnight":   nights_past_midnight,
+                "late_night_hours":       late_night_hours,
+                "long_day_streak":        int(long_day_streak),
+                "timezone":               user_tz,
             },
             "charts": {
                 "dates":          trend_dates,
@@ -376,6 +406,8 @@ Be clinical and precise. Max 75 words total."""
                 "heatmap_z":      z_matrix,
                 "weekly_bar":     weekly_bar,
                 "session_dist":   session_dist,
+                "late_minutes":   late_minutes,
+                "session_minutes": session_minutes,
             },
             "gemini": ai_recommendation,
         }
