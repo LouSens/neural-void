@@ -2,7 +2,7 @@
 
 # ⚡ Neural Void
 
-**TikTok Behaviour Intelligence**
+**Your TikTok habits, in plain numbers**
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -15,7 +15,7 @@
 
 </div>
 
-Clinical-grade behavioural analytics for TikTok watch history. Upload your data export to receive a 25-feature ML risk assessment and a Gemini-powered clinical report.
+Upload your TikTok watch history and get a clear picture of your own habits: how much you watch, when you watch, and one change that would give you hours back. Under the hood it is a 25-feature machine-learning pipeline with a three-model ensemble; on the screen it is written for people who have never heard of either.
 
 [Report a Bug](https://github.com/LouSens/neural-void/issues) · [Request Feature](https://github.com/LouSens/neural-void/issues)
 
@@ -23,13 +23,53 @@ Clinical-grade behavioural analytics for TikTok watch history. Upload your data 
 
 ## 📸 Screenshots
 
-| Landing Page | Upload Panel |
+| Welcome | Summary |
 |---|---|
-| ![Landing](reports/ui_landing.png) | ![Upload](reports/ui_upload.png) |
+| ![Welcome](reports/ui_welcome.png) | ![Summary](reports/ui_summary.png) |
+
+| When you watch | Your plan |
+|---|---|
+| ![When you watch](reports/ui_when.png) | ![Your plan](reports/ui_plan.png) |
+
+Screens show a made-up watch history, not a real person's.
 
 ---
 
 ## ✨ Features
+
+### What a person sees
+
+| Screen | What it tells them |
+|---|---|
+| **Welcome** | What they get, and three steps for getting the file out of TikTok |
+| **Add your file** | Confirms what it found ("about 24,800 videos · 61 days") before starting |
+| **Reading your history** | Five plain steps while the analysis runs, instead of a spinner |
+| **Summary** | "You watched about 115 hours of TikTok in 61 days", a habit level in words (Light, Moderate, High), what the hours add up to, and what stands out |
+| **When you watch** | The week hour by hour, the busiest time, and how much happens after midnight |
+| **How you watch** | A typical sitting, long sittings, repeat views, and minutes per day |
+| **Your plan** | A written read-out, three changes with the hours each would give back per month, a daily reminder, and the taps for TikTok's own limit |
+
+Other things it does:
+
+- **Since last time**: upload again later and the Summary opens with what changed. Only a few totals are kept, in the browser; the file never is.
+- **Save or share**: one picture of the headline numbers, or a printed full summary.
+- **Your own clock**: hours are shown in the visitor's time zone.
+- **Example mode**: look around with made-up numbers before uploading anything.
+
+### Plain words
+
+The interface avoids technical vocabulary. The mapping to the pipeline's terms:
+
+| On screen | In the pipeline |
+|---|---|
+| Sitting | Session (a 10-minute gap ends one) |
+| Long sitting | Binge session (45 minutes or more) |
+| Habit level | Risk level from the ensemble's score |
+| Scrolling speed | Doomscroll velocity (videos a minute) |
+| Videos you watched again | Re-watch ratio |
+| How this works | The 25 features, the three models and the accuracy, in a closed panel |
+
+### Under the hood
 
 | Category | Capability |
 |---|---|
@@ -37,16 +77,15 @@ Clinical-grade behavioural analytics for TikTok watch history. Upload your data 
 | **Session Detection** | 10-minute inactivity gap → new session boundary; flags binge sessions ≥ 45 min |
 | **Feature Engineering** | 25 ML features: velocity, late-night ratio, re-watch ratio, binge streak, lag & rolling windows |
 | **ML Ensemble** | Logistic Regression + Random Forest + XGBoost voting classifier — **96% accuracy** |
-| **Risk Scoring** | Calibrated probability: Low / Medium / High relapse risk with temporal trend |
-| **AI Report** | Gemini 2.5 Flash Lite generates a clinical 3-part behavioral diagnosis |
-| **Interactive Dashboard** | 3-tab UI — Overview, Sessions, Patterns; area charts, radar, heatmap, bar & pie charts |
+| **Risk Scoring** | Calibrated probability: Low / Medium / High with temporal trend |
+| **Written summary** | Gemini 2.5 Flash Lite writes three plain-language parts; a built-in fallback is used when Gemini is unavailable |
 
 ---
 
 ## 🗂️ Project Structure
 
 ```
-screentime-dashboard-tiktok/
+neural-void/
 │
 ├── main.py                  # FastAPI backend — feature pipeline + /analyze endpoint
 ├── tiktok-analysis.py       # ML training script — feature engineering & model export
@@ -61,16 +100,18 @@ screentime-dashboard-tiktok/
 ├── reports/                 # EDA & confusion matrix visualisations + UI screenshots
 │   ├── eda_report.png
 │   ├── confusion_matrix.png
-│   ├── ui_landing.png
-│   └── ui_upload.png
+│   └── ui_*.png
 │
 ├── dataset/                 # 🔒 Private — your .txt watch history files (gitignored)
 │
 └── frontend/                # React + Vite SPA
     ├── src/
-    │   ├── App.jsx          # All UI: Landing, Upload, Dashboard (3 tabs)
+    │   ├── App.jsx          # The flow: welcome, add file, reading, results (4 tabs)
+    │   ├── lib/
+    │   │   ├── insights.js  # Turns the analysis into plain-language numbers, plans, history
+    │   │   └── sample.js    # Made-up example data
     │   ├── main.jsx
-    │   └── index.css
+    │   └── index.css        # Palette and shared styles
     ├── public/
     ├── package.json
     └── vite.config.js
@@ -132,34 +173,40 @@ Raw TikTok .txt Export
             Level:  Low │ Medium │ High
                        │
                        ▼ Gemini 2.5 Flash Lite
-            Clinical 3-part Report:
-            • Behavioral Diagnosis
-            • Risk Forecast
-            • Intervention Protocol
+            Plain-language summary, 3 parts:
+            • What we see
+            • What is likely next
+            • One thing to try
 ```
 
 ---
 
-## 🖥️ Dashboard Tabs
+## 🖥️ Result Tabs
 
-### Overview
-- **8 KPI cards** — Events, Sessions, Avg Session Duration, Relapse Risk, Doomscroll Velocity, Late-Night Clips, Morning Triggers, Bad-Habit Days %
-- **Daily Habit Score** — EWM-smoothed area chart over entire dataset
-- **Day-of-Week Pattern** — Radar chart (score + clips per day)
-- **Doomscroll Velocity** — Line chart over time
-- **Weekly Avg Clips** — Bar chart by day
-- **Gemini Clinical Assessment** — Dark card with 3-part AI report
+### Summary
+- **The headline sentence**: hours watched over the period, and the daily average
+- **Habit level**: Light, Moderate or High, with the direction over the last two weeks
+- **Long sittings** and **scrolling speed**, each with a sentence that says what it means
+- **What it adds up to**: working days, films, and nights still watching after midnight
+- **What stands out**: three sentences picked from the person's own patterns
+- **Since last time**: the comparison with the previous upload, when there is one
 
-### Sessions
-- **Binge vs Normal** — Pie chart showing session type split
-- **Watch Time Over Time** — Area chart (daily minutes)
-- **Re-watch Ratio** — Progress bar card
-- **Late-Night & Morning** — Daily avg cards
+### When you watch
+- **Your week, hour by hour**: 7 days × 24 hours, brighter means more videos
+- **Busiest time** and heaviest day
+- **After midnight** share, and videos first thing in the morning
 
-### Patterns
-- **Activity Heatmap** — 7 rows (days) × 24 cols (hours), 5-level intensity scale
-- **Daily Clip Count** — Area chart
-- **Peak Hour & Peak Day** — Highlighted stat cards
+### How you watch
+- **A typical sitting**, **most long-sitting days in a row**, **videos you watched again**
+- **Minutes watched each day**, with the average and the unusually heavy days marked
+- **Short or long?**: the split between ordinary and long sittings
+
+### Your plan
+- **What we see · What is likely next · One thing to try**
+- **Pick one change**: stop at midnight, 30 minutes a sitting, or one hour a day, each with the hours it would give back per month, worked out from the person's own days
+- **Make it stick**: a 30-day daily reminder as a calendar file, and the taps for TikTok's own screen-time limit
+- **How this works**: the technical explanation, closed by default
+- **Save my summary**: a picture to keep or share, or a printed full summary
 
 ---
 
@@ -174,8 +221,8 @@ Raw TikTok .txt Export
 ### 1 — Clone & configure
 
 ```bash
-git clone https://github.com/LouSens/screentime-dashboard-tiktok.git
-cd screentime-dashboard-tiktok
+git clone https://github.com/LouSens/neural-void.git
+cd neural-void
 
 # Create .env
 echo GEMINI_API_KEY=your_key_here > .env
@@ -186,7 +233,7 @@ echo GEMINI_API_KEY=your_key_here > .env
 ```bash
 conda create -n tiktok python=3.11 -y
 conda activate tiktok
-pip install fastapi uvicorn pandas numpy scikit-learn xgboost joblib matplotlib seaborn python-dotenv google-genai python-multipart
+pip install -r requirements.txt
 ```
 
 ### 3 — Add your dataset
@@ -229,17 +276,24 @@ npm run dev
 # UI running at http://localhost:5173
 ```
 
+The front end calls the deployed API unless told otherwise. To use your local backend, create `frontend/.env.local`:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
 ---
 
 ## 🔌 API Reference
 
 ### `POST /analyze`
 
-Upload a `.txt` watch history file and receive the full analysis payload.
+Upload a `.txt` watch history file and receive the full analysis payload. The optional `tz` field is an IANA time zone name; hours are reported in that zone (default `Asia/Kuala_Lumpur`).
 
 ```bash
 curl -X POST http://localhost:8000/analyze \
-  -F "file=@dataset/Watch_History.txt"
+  -F "file=@dataset/Watch_History.txt" \
+  -F "tz=Asia/Jakarta"
 ```
 
 **Response schema:**
@@ -267,7 +321,12 @@ curl -X POST http://localhost:8000/analyze \
     "rewatched_ratio": 0.031,
     "bad_days_ratio": 0.62,
     "peak_hour": 23,
-    "peak_day": "Tuesday"
+    "peak_day": "Tuesday",
+    "days_tracked": 61,
+    "nights_past_midnight": 45,
+    "late_night_hours": 27.4,
+    "long_day_streak": 6,
+    "timezone": "Asia/Jakarta"
   },
   "charts": {
     "dates": [...],
@@ -279,9 +338,11 @@ curl -X POST http://localhost:8000/analyze \
     "radar_clips": [...],
     "heatmap_z": [[...7x24 matrix...]],
     "weekly_bar": [...],
-    "session_dist": { "binge": 87, "normal": 1153 }
+    "session_dist": { "binge": 87, "normal": 1153 },
+    "late_minutes": [...],
+    "session_minutes": [...]
   },
-  "gemini": "**Behavioral Diagnosis:** ..."
+  "gemini": "**What we see:** ... **What is likely next:** ... **One thing to try:** ..."
 }
 ```
 
@@ -290,6 +351,8 @@ curl -X POST http://localhost:8000/analyze \
 ```json
 { "status": "healthy", "model_loaded": true, "gemini": true }
 ```
+
+The front end calls this as soon as the page opens, so a backend that a free host has put to sleep is awake by the time a file is uploaded.
 
 ---
 
@@ -331,8 +394,8 @@ curl -X POST http://localhost:8000/analyze \
 | **Backend** | Python 3.11, FastAPI, Uvicorn |
 | **ML** | scikit-learn, XGBoost, NumPy, pandas |
 | **AI** | Google Gemini 2.5 Flash Lite (`google-genai`) |
-| **Frontend** | React 18, Vite, Recharts, Lucide React |
-| **Styling** | Vanilla CSS (Tailwind-free), Inter font |
+| **Frontend** | React 19, Vite 8, Lucide React; charts are hand-drawn SVG |
+| **Styling** | Tailwind CSS 4, Inter font |
 | **Environment** | Conda (`tiktok` env) |
 
 ---
@@ -346,6 +409,17 @@ curl -X POST http://localhost:8000/analyze \
 | Threshold Optimisation | Youden's J statistic |
 | Outlier Handling | Winsorization at 95th percentile |
 | Smoothing | Exponential Weighted Mean (span=3) |
+
+---
+
+## ☁️ Deployment
+
+| Part | Host | Notes |
+|---|---|---|
+| **Front end** | Vercel | `vercel.json` builds `frontend/`; set `VITE_API_URL` to the backend's address |
+| **Backend** | Any Python host | Start with `uvicorn main:app --host 0.0.0.0 --port $PORT`; set `GEMINI_API_KEY`; add the front end's address to `origins` in `main.py` |
+
+On a free host that sleeps when idle, the first request after a quiet spell takes about a minute. The page's `/health` call on load and the step-by-step reading screen are there to cover that wait.
 
 ---
 
