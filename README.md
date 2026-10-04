@@ -419,6 +419,8 @@ The front end calls this as soon as the page opens, so a backend that a free hos
 | **Front end** | Vercel | `vercel.json` builds `frontend/`; set `VITE_API_URL` to the backend's address |
 | **Backend** | Any Python host | Start with `uvicorn main:app --host 0.0.0.0 --port $PORT`; set `GEMINI_API_KEY`; add the front end's address to `origins` in `main.py` |
 
+The repo includes a Render Blueprint (`render.yaml`) for the free plan: open `https://render.com/deploy?repo=https://github.com/LouSens/neural-void`, sign in, and enter `GEMINI_API_KEY` when asked. Extra front-end addresses go in the `ALLOWED_ORIGINS` environment variable, comma-separated.
+
 On a free host that sleeps when idle, the first request after a quiet spell takes about a minute. The page's `/health` call on load and the step-by-step reading screen are there to cover that wait.
 
 ---

@@ -1,0 +1,19 @@
+# Render Blueprint: the NeuralVoid API on the free plan.
+# Deploy with https://render.com/deploy?repo=https://github.com/LouSens/neural-void
+services:
+  - type: web
+    name: neural-void-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      # The trained models were saved with the pinned scikit-learn and XGBoost in requirements.txt.
+      - key: GEMINI_API_KEY
+        sync: false # asked for at deploy time; the written summary falls back to built-in text without it
+      - key: ALLOWED_ORIGINS
+        value: https://neural-void-lovat.vercel.app

@@ -52,6 +52,8 @@ origins = [
     "http://localhost:5173",                # For local development
     "https://neural-void-lovat.vercel.app", # <--- ADD YOUR VERCEL DOMAIN HERE
 ]
+# Extra front-end addresses can be added without a code change: ALLOWED_ORIGINS=https://a.com,https://b.com
+origins += [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip() and o.strip().rstrip("/") not in origins]
 app.add_middleware(
     CORSMiddleware, 
     allow_origins=origins, 
