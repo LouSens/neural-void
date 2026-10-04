@@ -21,3 +21,15 @@ dependencies = [
 
 [tool.fastapi]
 entrypoint = "main:app"
+
+# This repo is an app, not a library: the only Python module to ship is main.py.
+# Without this, the builder sees frontend/, models/, reports/ and cannot tell what to package.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.uv]
+package = false

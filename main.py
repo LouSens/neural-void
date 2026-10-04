@@ -66,7 +66,8 @@ model_data = {}
 MODEL_LOADED = False
 FEATURE_NAMES = []
 try:
-    MODEL_DIR = Path('models')
+    # Look next to this file first, then in the working directory, so it loads wherever the host starts the app.
+    MODEL_DIR = next((d for d in (Path(__file__).resolve().parent / 'models', Path('models')) if d.exists()), Path('models'))
     model_data['model']    = joblib.load(MODEL_DIR / 'tiktok_voting_model.pkl')
     model_data['scaler']   = joblib.load(MODEL_DIR / 'tiktok_scaler.pkl')
     model_data['d_thresh'] = joblib.load(MODEL_DIR / 'decision_threshold.pkl')
