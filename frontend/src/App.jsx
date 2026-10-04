@@ -13,7 +13,8 @@ import {
 } from './lib/insights';
 import { SAMPLE_DATA } from './lib/sample';
 
-const API = import.meta.env.VITE_API_URL || 'https://fortunate-perception-production-341b.up.railway.app';
+// The deployed backend. VITE_API_URL overrides it, e.g. http://localhost:8000 for local work.
+const API = import.meta.env.VITE_API_URL || 'https://neural-void-3166c6bc.fastapicloud.dev';
 
 /* ───────────────────────── shared pieces ───────────────────────── */
 

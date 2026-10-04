@@ -17,6 +17,8 @@
 
 Upload your TikTok watch history and get a clear picture of your own habits: how much you watch, when you watch, and one change that would give you hours back. Under the hood it is a 25-feature machine-learning pipeline with a three-model ensemble; on the screen it is written for people who have never heard of either.
 
+**Live:** [neural-void.davidk-academic.workers.dev](https://neural-void.davidk-academic.workers.dev)
+
 [Report a Bug](https://github.com/LouSens/neural-void/issues) · [Request Feature](https://github.com/LouSens/neural-void/issues)
 
 ---
@@ -414,14 +416,16 @@ The front end calls this as soon as the page opens, so a backend that a free hos
 
 ## ☁️ Deployment
 
-| Part | Host | Notes |
+| Part | Host | How |
 |---|---|---|
-| **Front end** | Vercel | `vercel.json` builds `frontend/`; set `VITE_API_URL` to the backend's address |
-| **Backend** | Any Python host | Start with `uvicorn main:app --host 0.0.0.0 --port $PORT`; set `GEMINI_API_KEY`; add the front end's address to `origins` in `main.py` |
+| **Front end** | Cloudflare (free) | Root directory `frontend`, build `npm run build`, deploy `npx wrangler deploy`; `frontend/wrangler.jsonc` says which folder to serve |
+| **Backend** | FastAPI Cloud (free Hobby plan) | Linked to this repo; `pyproject.toml` pins Python 3.11 and the packages. Set `GEMINI_API_KEY` as a secret |
 
-The repo includes a Render Blueprint (`render.yaml`) for the free plan: open `https://render.com/deploy?repo=https://github.com/LouSens/neural-void`, sign in, and enter `GEMINI_API_KEY` when asked. Extra front-end addresses go in the `ALLOWED_ORIGINS` environment variable, comma-separated.
+Both redeploy when `main` is pushed. The front end calls the deployed backend by default; set `VITE_API_URL` to point it somewhere else. The backend accepts the live site and `localhost:5173`; add other addresses with `ALLOWED_ORIGINS` (comma-separated). `GEMINI_MODEL` overrides which Gemini model writes the summary.
 
-On a free host that sleeps when idle, the first request after a quiet spell takes about a minute. The page's `/health` call on load and the step-by-step reading screen are there to cover that wait.
+The backend sleeps when idle, so the first request after a quiet spell is slow. The page's `/health` call on load and the step-by-step reading screen are there to cover that wait.
+
+`render.yaml` is an alternative setup for Render's free plan.
 
 ---
 
