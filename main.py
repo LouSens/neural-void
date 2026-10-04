@@ -33,14 +33,19 @@ try:
     from google import genai
     if GEMINI_API_KEY and len(GEMINI_API_KEY) > 10:
         llm_client = genai.Client(api_key=GEMINI_API_KEY)
-        for mn in ['gemini-2.5-flash-lite']:
+        # Newest small models first; the 2.5 family is being retired. GEMINI_MODEL overrides the list.
+        candidates = [os.getenv("GEMINI_MODEL", "").strip(), 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite',
+                      'gemini-3.8-flash', 'gemini-2.5-flash-lite']
+        for mn in [m for m in candidates if m]:
             try:
                 llm_client.models.generate_content(model=mn, contents="Say OK")
                 working_model = mn
                 GEMINI_AVAILABLE = True
                 logger.info(f"✓ Gemini ready: {mn}")
                 break
-            except Exception:
+            except Exception as e:
+                # say why, so a bad key and a retired model can be told apart in the logs
+                logger.warning(f"Gemini model {mn} not usable: {str(e)[:160]}")
                 continue
 except Exception as e:
     logger.warning(f"Gemini unavailable: {e}")
@@ -211,7 +216,7 @@ async def read_root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "model_loaded": MODEL_LOADED, "gemini": GEMINI_AVAILABLE}
+    return {"status": "healthy", "model_loaded": MODEL_LOADED, "gemini": GEMINI_AVAILABLE, "gemini_model": working_model}
 
 
 @app.post("/analyze")

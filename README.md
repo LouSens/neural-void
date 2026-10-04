@@ -8,7 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.8-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.1-189FDD)](https://xgboost.readthedocs.io/)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash%20Lite-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-Flash--Lite-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
 [![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
@@ -78,7 +78,7 @@ The interface avoids technical vocabulary. The mapping to the pipeline's terms:
 | **Feature Engineering** | 25 ML features: velocity, late-night ratio, re-watch ratio, binge streak, lag & rolling windows |
 | **ML Ensemble** | Logistic Regression + Random Forest + XGBoost voting classifier — **96% accuracy** |
 | **Risk Scoring** | Calibrated probability: Low / Medium / High with temporal trend |
-| **Written summary** | Gemini 2.5 Flash Lite writes three plain-language parts; a built-in fallback is used when Gemini is unavailable |
+| **Written summary** | Gemini (a Flash-Lite model) writes three plain-language parts; a built-in fallback is used when Gemini is unavailable |
 
 ---
 
@@ -172,7 +172,7 @@ Raw TikTok .txt Export
             Risk Score  0.0 → 1.0
             Level:  Low │ Medium │ High
                        │
-                       ▼ Gemini 2.5 Flash Lite
+                       ▼ Gemini Flash-Lite
             Plain-language summary, 3 parts:
             • What we see
             • What is likely next
@@ -349,7 +349,7 @@ curl -X POST http://localhost:8000/analyze \
 ### `GET /health`
 
 ```json
-{ "status": "healthy", "model_loaded": true, "gemini": true }
+{ "status": "healthy", "model_loaded": true, "gemini": true, "gemini_model": "gemini-3.5-flash-lite" }
 ```
 
 The front end calls this as soon as the page opens, so a backend that a free host has put to sleep is awake by the time a file is uploaded.
@@ -393,7 +393,7 @@ The front end calls this as soon as the page opens, so a backend that a free hos
 |---|---|
 | **Backend** | Python 3.11, FastAPI, Uvicorn |
 | **ML** | scikit-learn, XGBoost, NumPy, pandas |
-| **AI** | Google Gemini 2.5 Flash Lite (`google-genai`) |
+| **AI** | Google Gemini Flash-Lite (`google-genai`); the model can be set with `GEMINI_MODEL` |
 | **Frontend** | React 19, Vite 8, Lucide React; charts are hand-drawn SVG |
 | **Styling** | Tailwind CSS 4, Inter font |
 | **Environment** | Conda (`tiktok` env) |
